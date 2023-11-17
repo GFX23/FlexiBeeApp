@@ -24,3 +24,15 @@ export type PolozkyObchDokladu = {
   kod: string;
   nazev: string;
 };
+
+export type Invoice = {
+  id: string;
+  cisObj: string;
+}
+
+export type PaginationData = {
+  rowCount: number;
+  ordersPerPage: number;
+  currentPage: number;
+  filter: string;
+}
