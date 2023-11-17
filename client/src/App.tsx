@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Order, PaginationData } from "./types";
+import { Order, PaginationData, PolozkyObchDokladu } from "./types";
 import Pagination from "./components/pagination";
 import axios from "axios";
 import {
@@ -18,9 +18,6 @@ const App: React.FC = () => {
     filter: "",
   });
 
-  console.log("input", input);
-  console.log("filter", paginationData.filter);
-
   useEffect(() => {
     const fetchOrderData = async () => {
       const response = await axios.post(
@@ -33,12 +30,19 @@ const App: React.FC = () => {
       );
       const data = await response.data;
       setData(data["objednavka-prijata"]);
-      console.log(data)
-      console.log(data["@rowCount"])
       setPaginationData({ ...paginationData, rowCount: parseInt(data["@rowCount"]) });
     };
     fetchOrderData();
   }, [paginationData.currentPage, paginationData.ordersPerPage]);
+
+  const renderItems = (polozky: PolozkyObchDokladu[]) => {
+    if (polozky === undefined || polozky.length === 0) return (<option>-----------------</option>)
+    return polozky.map((polozka, index) => (
+      <option key={index} className="">
+        {polozka.nazev}
+      </option>
+    ));
+  }
 
   return (
     <div className="App">
@@ -67,11 +71,7 @@ const App: React.FC = () => {
         {/** FILTER FUNCTION */}
         <p>Filter:</p>
         <input onChange={(e) => setInput(e.target.value)} type="text" />
-        <button
-          onClick={() =>
-            setPaginationData({ ...paginationData, filter: input })
-          }
-        >
+        <button onClick={() =>setPaginationData({ ...paginationData, filter: input })}>
           Hledej
         </button>
       </div>
@@ -81,8 +81,8 @@ const App: React.FC = () => {
         <thead>
           <tr>
             {/** HEADERS */}
-            {orderHeaders.map((header) => (
-              <th className={`border border-slate-500 bg-slate-100`}>
+            {orderHeaders.map((header, index) => (
+              <th key={index} className={`border border-slate-500 bg-slate-100`}>
                 {header}
               </th>
             ))}
@@ -92,7 +92,7 @@ const App: React.FC = () => {
           {/** BODY */}
           {data
             ? data?.map((order: Order) => (
-                <tr>
+                <tr key={order.id}>
                   <td>{order.kod}</td>
                   <td>{order.datVyst.substring(0, 10)}</td>
                   <td>{order["uzivatel@showAs"]}</td>
@@ -116,11 +116,7 @@ const App: React.FC = () => {
                   <td>
                     <select className="w-full">
                       {/** ITEMS */}
-                      {order.polozkyObchDokladu?.map((polozka) => (
-                        <option className="">
-                          {polozka.nazev ? polozka.nazev : "Nejsou" /**/}
-                        </option>
-                      ))}
+                      {renderItems(order.polozkyObchDokladu)}
                     </select>
                   </td>
                   <td>
