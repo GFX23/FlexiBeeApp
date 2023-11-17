@@ -7,6 +7,8 @@ export type Order = {
   mesto: string;
   stat: string;
   ["stat@showAs"]: string; // 
+  ["zamekK@showAs"]: string; //
+  ["uzivatel@showAs"]: string; //
   ulice: string;
   psc: string;
   ic: string;

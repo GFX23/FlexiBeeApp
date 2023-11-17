@@ -8,7 +8,7 @@
   }
 
   th{
-    @apply border text-center;
+    @apply border text-center px-2;
   }
 
   button {
