@@ -1,6 +1,7 @@
 import express from 'express';
 import axios from 'axios';
 import cors from 'cors';
+import { fullTextSearch } from './helpers';
 
 
 const app = express();  
@@ -47,17 +48,41 @@ app.post('/fetch-invoiceData', async (req, res) => {
 
 // FETCH ORDER API
 app.post('/fetch-orderData', async (req, res) => {
-  let { filter, limit, currentPage } = req.body;
+  let { limit, currentPage } = req.body;
+
+    // HOW MUCH ORDER SHOULD WE SKIP
   let skip = (currentPage - 1) * limit;
   try {
     const orderResponse = await axios.post(`${url}objednavka-prijata/query.json`, {
     winstrom: { detail: `custom:${detail.join(",")}`, "limit":limit, "start":skip, "add-row-count":"true",
     }});
 
-    res.json(orderResponse.data.winstrom);
+    res.json({rowCount: orderResponse.data.winstrom["@rowCount"], orders: orderResponse.data.winstrom["objednavka-prijata"]});
     console.log(`Found ${orderResponse.data.winstrom["@rowCount"]} orders. Displayed ${limit} orders`);
   } catch (error) {
     res.status(500).send('Chyba při získávání dat z Flexibee');
     console.log(error);
   }
 });
+
+// FETCH FILTERED ORDER API
+app.post('/fetch-filteredData', async (req, res) => {
+  let { filter, limit, currentPage } = req.body;
+
+  let skip = (currentPage - 1) * limit;
+  try {
+    const orderResponse = await axios.post(`${url}objednavka-prijata/query.json`, {
+    winstrom: { detail: `custom:${detail.join(",")}`, "limit":"0", "add-row-count":"true",
+    }});
+
+    const data = orderResponse.data.winstrom["objednavka-prijata"]
+    const filteredData = fullTextSearch(data, filter)
+
+    res.json({rowCount: filteredData.length, orders: filteredData.slice(skip, skip + limit)});
+    console.log(`Found ${orderResponse.data.winstrom["@rowCount"]} orders. Displayed ${limit} orders`);
+  } catch (error) {
+    res.status(500).send('Chyba při získávání dat z Flexibee');
+    console.log(error);
+  }
+});
+

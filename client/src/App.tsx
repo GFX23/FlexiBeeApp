@@ -20,8 +20,9 @@ const App: React.FC = () => {
 
   useEffect(() => {
     const fetchOrderData = async () => {
+      let url = paginationData.filter === "" ? "http://localhost:3001/fetch-orderData" : "http://localhost:3001/fetch-filteredData";
       const response = await axios.post(
-        "http://localhost:3001/fetch-orderData",
+        url,
         {
           limit: paginationData.ordersPerPage,
           currentPage: paginationData.currentPage,
@@ -29,11 +30,11 @@ const App: React.FC = () => {
         }
       );
       const data = await response.data;
-      setData(data["objednavka-prijata"]);
-      setPaginationData({ ...paginationData, rowCount: parseInt(data["@rowCount"]) });
+      setData(data.orders);
+      setPaginationData({ ...paginationData, rowCount: data["@rowCount"] ? parseInt(data["@rowCount"]) : data.rowCount });
     };
     fetchOrderData();
-  }, [paginationData.currentPage, paginationData.ordersPerPage]);
+  }, [paginationData.currentPage, paginationData.ordersPerPage, paginationData.filter]);
 
   const renderItems = (polozky: PolozkyObchDokladu[]) => {
     if (polozky === undefined || polozky.length === 0) return (<option>-----------------</option>)
@@ -42,6 +43,15 @@ const App: React.FC = () => {
         {polozka.nazev}
       </option>
     ));
+  }
+
+  const handleScreenChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const currentPos: number = (paginationData.currentPage -1) * paginationData.ordersPerPage;
+    setPaginationData({
+      ...paginationData,
+      ordersPerPage: parseInt(e.target.value),
+      currentPage: Math.ceil((currentPos +1) / parseInt(e.target.value)),
+    });
   }
 
   return (
@@ -57,11 +67,7 @@ const App: React.FC = () => {
         />
         <p>Počet na stránce:</p>
         <select
-          onChange={(e) =>
-            setPaginationData({
-              ...paginationData,
-              ordersPerPage: parseInt(e.target.value),
-            })
+          onChange={(e) => handleScreenChange(e)
           }
         >
           <option value="10">10</option>
@@ -71,7 +77,7 @@ const App: React.FC = () => {
         {/** FILTER FUNCTION */}
         <p>Filter:</p>
         <input onChange={(e) => setInput(e.target.value)} type="text" />
-        <button onClick={() =>setPaginationData({ ...paginationData, filter: input })}>
+        <button onClick={() =>setPaginationData({ ...paginationData, currentPage: 1, filter: input })}>
           Hledej
         </button>
       </div>

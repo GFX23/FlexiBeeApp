@@ -20,10 +20,11 @@ const Pagination: React.FC<PaginationProps> = ({ paginationData, setPaginationDa
   const handleClick = (operation: string) => {
     switch(operation) {
       case "++":
+        if (paginationData.currentPage >= pages[pages.length-1]) break;
         setPaginationData({...paginationData, currentPage: currentPage + 1});
         break;
       case "--":
-        if (currentPage === 1) return;
+        if (currentPage === 1) break;
         setPaginationData({...paginationData, currentPage: currentPage - 1});
         break;
       case ">>":
