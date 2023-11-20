@@ -30,7 +30,7 @@ app.post('/fetch-invoiceData', async (req, res) => {
       winstrom: payload
     });
 
-    
+    // CHECK IF INVOICE EXISTS
     if (invoiceResponse.data.winstrom["faktura-vydana"].length === 0) {
       console.log("Faktura nenalezena");
       return res.status(404).send('Faktura nenalezena');
@@ -38,6 +38,7 @@ app.post('/fetch-invoiceData', async (req, res) => {
       console.log("Nalezeno: ",invoiceResponse.data.winstrom["faktura-vydana"].length, " faktura/faktur");
     }
     
+    // SEND DATA
     return res.json(invoiceResponse.data.winstrom["faktura-vydana"]);
 
   } catch (error) {
@@ -57,6 +58,7 @@ app.post('/fetch-orderData', async (req, res) => {
     winstrom: { detail: `custom:${detail.join(",")}`, "limit":limit, "start":skip, "add-row-count":"true",
     }});
 
+    // SEND DATA
     res.json({rowCount: orderResponse.data.winstrom["@rowCount"], orders: orderResponse.data.winstrom["objednavka-prijata"]});
     console.log(`Found ${orderResponse.data.winstrom["@rowCount"]} orders. Displayed ${limit} orders`);
   } catch (error) {
@@ -69,15 +71,18 @@ app.post('/fetch-orderData', async (req, res) => {
 app.post('/fetch-filteredData', async (req, res) => {
   let { filter, limit, currentPage } = req.body;
 
+  // HOW MUCH ORDER SHOULD WE SKIP
   let skip = (currentPage - 1) * limit;
   try {
     const orderResponse = await axios.post(`${url}objednavka-prijata/query.json`, {
     winstrom: { detail: `custom:${detail.join(",")}`, "limit":"0", "add-row-count":"true",
     }});
 
+    // FILTER DATA
     const data = orderResponse.data.winstrom["objednavka-prijata"]
     const filteredData = fullTextSearch(data, filter)
 
+    // SEND DATA
     res.json({rowCount: filteredData.length, orders: filteredData.slice(skip, skip + limit)});
     console.log(`Found ${orderResponse.data.winstrom["@rowCount"]} orders. Displayed ${limit} orders`);
   } catch (error) {

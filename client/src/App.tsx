@@ -18,41 +18,66 @@ const App: React.FC = () => {
     filter: "",
   });
 
+
+  // FETCH DATA FROM SERVER - URL BASED ON FILTER
   useEffect(() => {
     const fetchOrderData = async () => {
-      let url = paginationData.filter === "" ? "http://localhost:3001/fetch-orderData" : "http://localhost:3001/fetch-filteredData";
-      const response = await axios.post(
-        url,
-        {
-          limit: paginationData.ordersPerPage,
-          currentPage: paginationData.currentPage,
-          filter: paginationData.filter,
-        }
-      );
+      let url =
+        paginationData.filter === ""
+          ? "http://localhost:3001/fetch-orderData"
+          : "http://localhost:3001/fetch-filteredData";
+      const response = await axios.post(url, {
+        limit: paginationData.ordersPerPage,
+        currentPage: paginationData.currentPage,
+        filter: paginationData.filter,
+      });
       const data = await response.data;
       setData(data.orders);
-      setPaginationData({ ...paginationData, rowCount: data["@rowCount"] ? parseInt(data["@rowCount"]) : data.rowCount });
+      setPaginationData({
+        ...paginationData,
+        rowCount: data["@rowCount"]
+          ? parseInt(data["@rowCount"])
+          : data.rowCount,
+      });
     };
     fetchOrderData();
-  }, [paginationData.currentPage, paginationData.ordersPerPage, paginationData.filter]);
+  }, [
+    paginationData.currentPage,
+    paginationData.ordersPerPage,
+    paginationData.filter,
+  ]);
 
+  // RENDER ORDER ITEMS
   const renderItems = (polozky: PolozkyObchDokladu[]) => {
-    if (polozky === undefined || polozky.length === 0) return (<option>-----------------</option>)
+    if (polozky === undefined || polozky.length === 0)
+      return <option>-----------------</option>;
     return polozky.map((polozka, index) => (
       <option key={index} className="">
         {polozka.nazev}
       </option>
     ));
-  }
+  };
 
+  // HANDLER FOR NUMBER OF ITEMS ON PAGE CHANGE
   const handleScreenChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const currentPos: number = (paginationData.currentPage -1) * paginationData.ordersPerPage;
+    const currentPos: number =
+      (paginationData.currentPage - 1) * paginationData.ordersPerPage;
     setPaginationData({
       ...paginationData,
       ordersPerPage: parseInt(e.target.value),
-      currentPage: Math.ceil((currentPos +1) / parseInt(e.target.value)),
+      currentPage: Math.ceil((currentPos + 1) / parseInt(e.target.value)),
     });
-  }
+  };
+
+  const handleRemoveFilter = () => {
+    setPaginationData({ ...paginationData, filter: "" });
+    setInput("");
+  };
+
+  // CALCULATE CURRENTLY VIEWED ORDERS
+  const viewedOrders =
+    paginationData.ordersPerPage * (paginationData.currentPage - 1);
+  const lastViewedOrder = viewedOrders + paginationData.ordersPerPage;
 
   return (
     <div className="App">
@@ -66,19 +91,32 @@ const App: React.FC = () => {
           setPaginationData={setPaginationData}
         />
         <p>Počet na stránce:</p>
-        <select
-          onChange={(e) => handleScreenChange(e)
-          }
-        >
+        <select onChange={(e) => handleScreenChange(e)}>
           <option value="10">10</option>
           <option value="20">20</option>
         </select>
 
         {/** FILTER FUNCTION */}
         <p>Filter:</p>
-        <input onChange={(e) => setInput(e.target.value)} type="text" />
-        <button onClick={() =>setPaginationData({ ...paginationData, currentPage: 1, filter: input })}>
+        <input
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          type="text"
+        />
+        <button
+          onClick={() =>
+            setPaginationData({
+              ...paginationData,
+              currentPage: 1,
+              filter: input,
+            })
+          }
+        >
           Hledej
+        </button>
+        {/** REMOVE FILTER */}
+        <button onClick={() => handleRemoveFilter()}>
+          {paginationData.filter} X
         </button>
       </div>
 
@@ -88,7 +126,10 @@ const App: React.FC = () => {
           <tr>
             {/** HEADERS */}
             {orderHeaders.map((header, index) => (
-              <th key={index} className={`border border-slate-500 bg-slate-100`}>
+              <th
+                key={index}
+                className={`border border-slate-500 bg-slate-100`}
+              >
                 {header}
               </th>
             ))}
@@ -136,6 +177,13 @@ const App: React.FC = () => {
             : null}
         </tbody>
       </table>
+      <p className="ml-2">{`Nalezeno ${
+        paginationData.rowCount
+      } položek. Zobrazeno ${viewedOrders + 1} - ${
+        lastViewedOrder > paginationData.rowCount
+          ? paginationData.rowCount
+          : lastViewedOrder
+      }`}</p>
     </div>
   );
 };
