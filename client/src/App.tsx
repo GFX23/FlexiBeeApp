@@ -35,10 +35,8 @@ const App: React.FC = () => {
           currentPage: paginationData.currentPage,
           filter: paginationData.filter,
         });
-  
+        
         const data = await response.data;
-        console.log(data);
-  
         setData(data.orders);
         setPaginationData(prevState => ({
           ...prevState,
