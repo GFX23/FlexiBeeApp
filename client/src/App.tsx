@@ -9,7 +9,8 @@ import {
 } from "./utils/helperFunctions";
 
 const App: React.FC = () => {
-  const [data, setData] = useState<Order[] | null>(null);
+  const [data, setData] = useState<Order[]>([]);
+  const [loading, setLoading] = useState<boolean>(false);
   const [input, setInput] = useState<string>("");
   const [paginationData, setPaginationData] = useState<PaginationData>({
     rowCount: 0,
@@ -22,23 +23,34 @@ const App: React.FC = () => {
   // FETCH DATA FROM SERVER - URL BASED ON FILTER
   useEffect(() => {
     const fetchOrderData = async () => {
-      let url =
-        paginationData.filter === ""
-          ? "http://localhost:3001/fetch-orderData"
-          : "http://localhost:3001/fetch-filteredData";
-      const response = await axios.post(url, {
-        limit: paginationData.ordersPerPage,
-        currentPage: paginationData.currentPage,
-        filter: paginationData.filter,
-      });
-      const data = await response.data;
-      setData(data.orders);
-      setPaginationData({
-        ...paginationData,
-        rowCount: data["@rowCount"]
-          ? parseInt(data["@rowCount"])
-          : data.rowCount,
-      });
+      setLoading(true); // Start loading
+      try {
+        let url =
+          paginationData.filter === ""
+            ? "http://localhost:3001/fetch-orderData"
+            : "http://localhost:3001/fetch-filteredData";
+  
+        const response = await axios.post(url, {
+          limit: paginationData.ordersPerPage,
+          currentPage: paginationData.currentPage,
+          filter: paginationData.filter,
+        });
+  
+        const data = await response.data;
+        console.log(data);
+  
+        setData(data.orders);
+        setPaginationData(prevState => ({
+          ...prevState,
+          rowCount: data["@rowCount"] ? parseInt(data["@rowCount"]) : data.rowCount,
+        }));
+  
+      } catch (error) {
+        console.error("Error fetching data:", error);
+        // Handle the error as per your requirement
+      } finally {
+        setLoading(false); // Stop loading regardless of success or error
+      }
     };
     fetchOrderData();
   }, [
@@ -139,7 +151,7 @@ const App: React.FC = () => {
           {/** BODY */}
           {data
             ? data?.map((order: Order) => (
-                <tr key={order.id}>
+              <tr key={order.id}>
                   <td>{order.kod}</td>
                   <td>{order.datVyst.substring(0, 10)}</td>
                   <td>{order["uzivatel@showAs"]}</td>
@@ -174,16 +186,14 @@ const App: React.FC = () => {
                   </td>
                 </tr>
               ))
-            : null}
+              : null}
         </tbody>
       </table>
-      <p className="ml-2">{`Nalezeno ${
-        paginationData.rowCount
-      } položek. Zobrazeno ${viewedOrders + 1} - ${
-        lastViewedOrder > paginationData.rowCount
-          ? paginationData.rowCount
-          : lastViewedOrder
-      }`}</p>
+      {loading ? <p className="ml-2">Loading...</p> : null}
+      <div className="flex flex-row gap-4">
+      <p className="ml-2">{`Nalezeno ${paginationData.rowCount} položek.`}</p>
+      {paginationData.rowCount > 0 ? <p>{`Zobrazeno ${viewedOrders + 1} - ${lastViewedOrder > paginationData.rowCount? paginationData.rowCount: lastViewedOrder}`}</p> : null}
+      </div>
     </div>
   );
 };
