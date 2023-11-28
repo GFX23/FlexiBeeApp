@@ -13,7 +13,7 @@ app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 } );
 
-// ŘÁDKY KTERÉ CHCI ZÍSKAT Z OBJEDNÁVKY PŘIJATÉ
+// COLS TO FETCH FROM ABRAFLEXI
 const detail = ["uzivatel","kod","datVyst","kontaktJmeno","mesto","stat","ulice","psc","ic","dic","formaDopravy","formaUhradyCis","zamekK","nazFirmy","sumCelkem","polozkyObchDokladu(kod,nazev)","mena"]
 
 // MAIN URL
